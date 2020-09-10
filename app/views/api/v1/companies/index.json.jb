@@ -1,0 +1,8 @@
+# frozen_string_literal: true
+
+@companies.map do |company|
+  {
+    id: company.id,
+    name: company.name
+  }
+end

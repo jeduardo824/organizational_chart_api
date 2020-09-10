@@ -1,0 +1,6 @@
+# frozen_string_literal: true
+
+{
+  id: @company.id,
+  name: @company.name
+}
