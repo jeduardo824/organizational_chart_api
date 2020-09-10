@@ -1,0 +1,19 @@
+#!/bin/sh
+
+GREEN="\x1b[32m"
+COLOR_RESET="\x1b[0m"
+
+echo_with_color() {
+  echo "$2$1$COLOR_RESET"
+}
+
+set -e
+
+echo_with_color "Copying necessary files..." $GREEN
+cp ./config/database.yml.sample ./config/database.yml
+echo_with_color "Starting Docker build..." $GREEN
+docker-compose build --no-cache
+docker-compose run --rm web bundle install
+docker-compose run --rm web bundle exec rails db:setup
+docker-compose run --rm web bundle exec rails db:test:prepare
+echo_with_color "Setup finished..." $GREEN
