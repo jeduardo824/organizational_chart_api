@@ -17,15 +17,15 @@ RSpec.describe Api::V1::CompaniesController, type: :routing do
     end
 
     it "routes to #update via PUT" do
-      expect(put: "/companies/1").not_to be_routable
+      expect(put: "/api/v1/companies/1").not_to be_routable
     end
 
     it "routes to #update via PATCH" do
-      expect(patch: "/companies/1").not_to be_routable
+      expect(patch: "/api/v1/companies/1").not_to be_routable
     end
 
     it "routes to #destroy" do
-      expect(delete: "/companies/1").not_to be_routable
+      expect(delete: "/api/v1/companies/1").not_to be_routable
     end
   end
 end
