@@ -26,6 +26,6 @@ class Api::V1::CompaniesController < ApplicationController
     end
 
     def company_params
-      params.require(:company).permit(:name)
+      params.require(:company).permit(:name, collaborators_attributes: [:name, :email])
     end
 end

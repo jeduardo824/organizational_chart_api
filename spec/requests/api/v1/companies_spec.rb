@@ -83,52 +83,134 @@ RSpec.describe "/api/v1/companies", type: :request do
   describe "POST /create" do
     context "with valid parameters" do
       let(:action) do
-        post api_v1_companies_url, params: { company: valid_attributes }, as: :json
+        post api_v1_companies_url,
+             params: { company: valid_attributes }, as: :json
       end
 
-      it "creates a new Company" do
-        expect { action }.to change(Company, :count).by(1)
+      context "with nested collaborators" do
+        let(:valid_attributes) do
+          { name: company_name,
+            collaborators_attributes: [
+              { name: "Collaborator 1", email: "collab_1@example.com" },
+              { name: "Collaborator 2", email: "collab_2@example.com" },
+            ]
+          }
+        end
+
+        it "creates a new Company" do
+          expect { action }.to change(Company, :count).by(1)
+        end
+
+        it "creates new Collaborators" do
+          expect { action }.to change(Collaborator, :count).by(2)
+        end
+
+        it "returns the correct status code" do
+          action
+          expect(response).to have_http_status(:created)
+        end
+
+        it "renders a JSON response" do
+          action
+          expect(response.content_type).to match(a_string_including("application/json"))
+        end
+
+        it "renders the created company" do
+          action
+          expect(response.body).to match(a_string_including("A Company Name"))
+        end
       end
 
-      it "returns the correct status response" do
-        action
-        expect(response).to have_http_status(:created)
-      end
+      context "without nested collaborators" do
+        it "creates a new Company" do
+          expect { action }.to change(Company, :count).by(1)
+        end
 
-      it "renders a JSON response" do
-        action
-        expect(response.content_type).to match(a_string_including("application/json"))
-      end
+        it "does not create new Collaborators" do
+          expect { action }.to change(Collaborator, :count).by(0)
+        end
 
-      it "renders the created company" do
-        action
-        expect(response.body).to match(a_string_including("A Company Name"))
+        it "returns the correct status code" do
+          action
+          expect(response).to have_http_status(:created)
+        end
+
+        it "renders a JSON response" do
+          action
+          expect(response.content_type).to match(a_string_including("application/json"))
+        end
+
+        it "renders the created company" do
+          action
+          expect(response.body).to match(a_string_including("A Company Name"))
+        end
       end
     end
 
     context "with invalid parameters" do
-      let(:expected_body) { "{\"name\":[\"can't be blank\"]}" }
       let(:action) do
-        post api_v1_companies_url, params: { company: invalid_attributes }, as: :json
+        post api_v1_companies_url,
+             params: { company: invalid_attributes }, as: :json
       end
 
-      it "does not create a new Company" do
-        expect { action }.to change(Company, :count).by(0)
+      context "on nested attributes" do
+        let(:invalid_attributes) do
+          { name: company_name,
+            collaborators_attributes: [
+              { name: "Collaborator 1", email: "collab_1" },
+              { name: "", email: "collab_2@example.com" },
+            ]
+          }
+        end
+        let(:expected_body) do
+          "{\"collaborators.email\":[\"is invalid\"],\"collaborators.name\":[\"can't be blank\"]}"
+        end
+
+        it "does not create a new Company" do
+          expect { action }.to change(Company, :count).by(0)
+        end
+
+        it "does not create new Collaborators" do
+          expect { action }.to change(Collaborator, :count).by(0)
+        end
+
+        it "returns the correct status code" do
+          action
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
+
+        it "renders a JSON response" do
+          action
+          expect(response.content_type).to match(a_string_including("application/json"))
+        end
+
+        it "renders the error for the new company" do
+          action
+          expect(response.body).to match(expected_body)
+        end
       end
 
-      it "returns the correct status response" do
-        action
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
+      context "on the company data" do
+        let(:expected_body) { "{\"name\":[\"can't be blank\"]}" }
 
-      it "renders a JSON response" do
-        action
-        expect(response.content_type).to match(a_string_including("application/json"))
-      end
+        it "does not create a new Company" do
+          expect { action }.to change(Company, :count).by(0)
+        end
 
-      it "renders the errors for the new company" do
-        action
-        expect(response.body).to match(expected_body)
+        it "returns the correct status code" do
+          action
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
+
+        it "renders a JSON response" do
+          action
+          expect(response.content_type).to match(a_string_including("application/json"))
+        end
+
+        it "renders the error for the new company" do
+          action
+          expect(response.body).to match(expected_body)
+        end
       end
     end
   end
