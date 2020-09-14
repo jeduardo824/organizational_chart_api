@@ -4,6 +4,7 @@ require "rails_helper"
 
 RSpec.describe "/api/v1/companies", type: :request do
   include CompaniesSpecHelper
+  include RequestExceptionSpecHelper
 
   let(:company_name) { "A Company Name" }
   let(:valid_attributes) { { name: company_name } }
@@ -28,8 +29,6 @@ RSpec.describe "/api/v1/companies", type: :request do
     end
 
     context "without companies available" do
-      let(:expected_body) { [] }
-
       before do
         get api_v1_companies_url, as: :json
       end
@@ -39,7 +38,7 @@ RSpec.describe "/api/v1/companies", type: :request do
       end
 
       it "renders the correct response body" do
-        expect(JSON.parse(response.body)).to match(expected_body)
+        expect(JSON.parse(response.body)).to match([])
       end
     end
   end
@@ -64,7 +63,9 @@ RSpec.describe "/api/v1/companies", type: :request do
 
     context "without company available" do
       let(:random_id) { 1 }
-      let(:expected_body) { { message: "Record not found" }.stringify_keys }
+      let(:expected_body) do
+        exception_body("Couldn't find Company with 'id'=#{random_id}")
+      end
 
       before do
         get api_v1_company_url(random_id), as: :json
@@ -162,8 +163,9 @@ RSpec.describe "/api/v1/companies", type: :request do
             ]
           }
         end
+
         let(:expected_body) do
-          "{\"collaborators.email\":[\"is invalid\"],\"collaborators.name\":[\"can't be blank\"]}"
+          exception_body("Validation failed: Collaborators email is invalid, Collaborators name can't be blank")
         end
 
         it "does not create a new Company" do
@@ -186,12 +188,12 @@ RSpec.describe "/api/v1/companies", type: :request do
 
         it "renders the error for the new company" do
           action
-          expect(response.body).to match(expected_body)
+          expect(JSON.parse(response.body)).to match(expected_body)
         end
       end
 
       context "on the company data" do
-        let(:expected_body) { "{\"name\":[\"can't be blank\"]}" }
+        let(:expected_body) { exception_body("Validation failed: Name can't be blank") }
 
         it "does not create a new Company" do
           expect { action }.to change(Company, :count).by(0)
@@ -209,7 +211,7 @@ RSpec.describe "/api/v1/companies", type: :request do
 
         it "renders the error for the new company" do
           action
-          expect(response.body).to match(expected_body)
+          expect(JSON.parse(response.body)).to match(expected_body)
         end
       end
     end

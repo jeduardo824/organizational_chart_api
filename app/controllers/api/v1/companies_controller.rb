@@ -11,13 +11,9 @@ class Api::V1::CompaniesController < ApplicationController
   end
 
   def create
-    @company = Company.new(company_params)
+    @company = Company.create!(company_params)
 
-    if @company.save
-      render :show, status: :created
-    else
-      render json: @company.errors, status: :unprocessable_entity
-    end
+    render :show, status: :created
   end
 
   private
