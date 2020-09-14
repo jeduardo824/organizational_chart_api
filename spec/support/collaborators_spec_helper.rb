@@ -12,6 +12,7 @@ module CollaboratorsSpecHelper
       id: collaborator.id,
       name: collaborator.name,
       email: collaborator.email,
+      manager_id: collaborator.manager_id,
       company_id: collaborator.company_id
     }.stringify_keys
   end
