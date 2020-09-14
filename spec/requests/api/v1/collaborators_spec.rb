@@ -227,6 +227,169 @@ RSpec.describe "/api/v1/collaborators", type: :request do
         it "renders the error for the not existing company" do
           action
           expect(response.body).to match(expected_body)
+  describe "GET /show" do
+    let(:company) { create(:company) }
+    let(:manager) { create(:collaborator, company: company) }
+    let!(:collaborators) do
+      create_list(:collaborator, 3, manager: manager, company: company)
+    end
+
+    context "valid request" do
+      context "with peers as info_type" do
+        context "with collaborators available" do
+          let(:info_type) { :peers }
+          let(:expected_body) do
+            collaborators_expected_response([collaborators.second, collaborators.third])
+          end
+
+          before do
+            get api_v1_collaborator_url(id: collaborators.first.id,
+                                        info_type: info_type), as: :json
+          end
+
+          it "returns the correct status code" do
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "renders the correct records" do
+            expect(JSON.parse(response.body)).to match(expected_body)
+          end
+        end
+
+        context "without collaborators available" do
+          let(:info_type) { :peers }
+          let(:other_manager) { create(:collaborator, company: company) }
+          let(:collaborator) do
+            create(:collaborator, company: company, manager: other_manager)
+          end
+
+          before do
+            get api_v1_collaborator_url(id: collaborator.id,
+                                        info_type: info_type), as: :json
+          end
+
+          it "returns the correct status code" do
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "renders the correct records" do
+            expect(JSON.parse(response.body)).to match([])
+          end
+        end
+      end
+
+      context "with managed as info_type" do
+        context "with collaborators available" do
+          let(:info_type) { :managed }
+          let(:expected_body) do
+            collaborators_expected_response(collaborators)
+          end
+
+          before do
+            get api_v1_collaborator_url(id: manager,
+                                        info_type: info_type), as: :json
+          end
+
+          it "returns the correct status code" do
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "renders the correct records" do
+            expect(JSON.parse(response.body)).to match(expected_body)
+          end
+        end
+
+        context "without collaborators available" do
+          let(:info_type) { :managed }
+          let(:other_manager) { create(:collaborator, company: company) }
+
+          before do
+            get api_v1_collaborator_url(id: other_manager,
+                                        info_type: info_type), as: :json
+          end
+
+          it "returns the correct status code" do
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "renders the correct records" do
+            expect(JSON.parse(response.body)).to match([])
+          end
+        end
+      end
+
+      context "with second_level_managed as info_type" do
+        context "with collaborators available" do
+          let(:info_type) { :second_level_managed }
+
+          let!(:first_collab_managed) do
+            create_list(:collaborator, 2,
+                        company: company,
+                        manager: collaborators.first)
+          end
+
+          let!(:second_collab_managed) do
+            create_list(:collaborator, 5,
+                        company: company,
+                        manager: collaborators.second)
+          end
+
+          let(:expected_body) do
+            collaborators_expected_response([first_collab_managed, second_collab_managed].flatten)
+          end
+
+          before do
+            get api_v1_collaborator_url(id: manager,
+                                        info_type: info_type), as: :json
+          end
+
+          it "returns the correct status code" do
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "renders the correct records" do
+            expect(JSON.parse(response.body)).to match(expected_body)
+          end
+        end
+
+        context "without collaborators available" do
+          let(:info_type) { :second_level_managed }
+
+          before do
+            get api_v1_collaborator_url(id: manager,
+                                        info_type: info_type), as: :json
+          end
+
+          it "returns the correct status code" do
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "renders the correct records" do
+            expect(JSON.parse(response.body)).to match([])
+          end
+        end
+      end
+
+      context "with invalid info_type" do
+        let(:info_type) { :invalid }
+        let(:expected_body) { exception_body("Information type is not valid") }
+
+        before do
+          get api_v1_collaborator_url(id: manager,
+                                      info_type: info_type), as: :json
+        end
+
+        it "returns the correct status code" do
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it "renders the correct records" do
+          expect(JSON.parse(response.body)).to match(expected_body)
+        end
+      end
+    end
+  end
+
   describe "PUT /update" do
     let(:company) { create(:company) }
     let!(:collaborator) { create(:collaborator, company: company) }

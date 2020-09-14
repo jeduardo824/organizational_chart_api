@@ -11,4 +11,12 @@ class Collaborator < ApplicationRecord
   validates :email, format: {
     with: REGEX_EMAIL, message: "is invalid"
   }, uniqueness: { case_sensitive: false }
+
+  def peers
+    managed_by_manager.where.not(id: id)
+  end
+
+  def managed_by_manager
+    manager.managed
+  end
 end

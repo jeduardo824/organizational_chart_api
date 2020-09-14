@@ -38,4 +38,35 @@ RSpec.describe Collaborator, type: :model do
       it { is_expected.not_to allow_value("example@example.com").for(:email) }
     end
   end
+
+  describe "#peers" do
+    let(:manager) { create(:collaborator) }
+    let(:collaborators) do
+      create_list(:collaborator, 3, manager: manager, company: manager.company)
+    end
+
+    subject { collaborators.first.peers }
+
+    it "returns the correct peers" do
+      expect(subject).to match([collaborators.second, collaborators.third])
+    end
+  end
+
+  describe "#managed_by_manager" do
+    let(:manager) { create(:collaborator) }
+
+    let(:collaborators) do
+      create_list(:collaborator, 3, manager: manager, company: manager.company)
+    end
+
+    let(:expected_array) do
+      [collaborators.first, collaborators.second, collaborators.third]
+    end
+
+    subject { collaborators.first.managed_by_manager }
+
+    it "returns the correct peers" do
+      expect(subject).to match(expected_array)
+    end
+  end
 end

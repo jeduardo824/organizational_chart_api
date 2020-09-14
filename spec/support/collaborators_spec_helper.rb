@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module CollaboratorsSpecHelper
-  def index_expected_response(collaborators)
+  def collaborators_expected_response(collaborators)
     collaborators.map do |collaborator|
       collaborator_attributes(collaborator)
     end
