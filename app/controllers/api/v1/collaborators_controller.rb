@@ -13,12 +13,13 @@ class Api::V1::CollaboratorsController < ApplicationController
 
   def create
     @collaborator = @company.collaborators.build(collaborator_params)
+  def show
+    @collaborators = FindCollaboratorsService.call!(collaborator: @collaborator,
+                                                    info_type: params[:info_type])
 
-    if @collaborator.save
-      render json: @collaborator, status: :created
-    else
-      render json: @collaborator.errors, status: :unprocessable_entity
-    end
+    render :collaborators
+  end
+
   def update
     ValidateManagerService.call!(collaborator: @collaborator, manager: @manager)
 

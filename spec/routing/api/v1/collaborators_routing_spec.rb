@@ -9,7 +9,7 @@ RSpec.describe Api::V1::CollaboratorsController, type: :routing do
     end
 
     it "routes to #show" do
-      expect(get: "/api/v1/collaborators/1").not_to be_routable
+      expect(get: "/api/v1/collaborators/1").to route_to("api/v1/collaborators#show", id: "1")
     end
 
     it "routes to #create" do
