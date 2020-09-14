@@ -4,6 +4,7 @@ require "rails_helper"
 
 RSpec.describe "/api/v1/collaborators", type: :request do
   include CollaboratorsSpecHelper
+  include RequestExceptionSpecHelper
 
   let(:name) { "Collaborator name" }
   let(:email) { "collaborator@email.com" }
@@ -19,7 +20,7 @@ RSpec.describe "/api/v1/collaborators", type: :request do
   describe "GET /index" do
     context "with several companies available" do
       let!(:collaborators) { create_list(:collaborator, 2, company: company) }
-      let(:expected_body) { index_expected_response(collaborators) }
+      let(:expected_body) { collaborators_expected_response(collaborators) }
 
       before do
         create_list(:collaborator, 5)
@@ -36,8 +37,6 @@ RSpec.describe "/api/v1/collaborators", type: :request do
     end
 
     context "without collaborators on the company" do
-      let(:expected_body) { [] }
-
       before do
         create_list(:collaborator, 5)
         get api_v1_company_collaborators_url(company.id), as: :json
@@ -48,13 +47,15 @@ RSpec.describe "/api/v1/collaborators", type: :request do
       end
 
       it "renders the correct response body" do
-        expect(JSON.parse(response.body)).to match(expected_body)
+        expect(JSON.parse(response.body)).to match([])
       end
     end
 
     context "with invalid company" do
       let(:company_id) { 1 }
-      let(:expected_body) { { "message" => "Record not found" } }
+      let(:expected_body) do
+        exception_body("Couldn't find Company with 'id'=#{company_id}")
+      end
 
       before do
         create_list(:collaborator, 5)
@@ -107,14 +108,14 @@ RSpec.describe "/api/v1/collaborators", type: :request do
       end
 
       context "invalid email" do
-        let(:expected_body) { "{\"email\":[\"is invalid\"]}" }
-        let(:invalid_attributes) {
+        let(:expected_body) { exception_body("Validation failed: Email is invalid") }
+        let(:company_id) { create(:company).id }
+        let(:invalid_attributes) do
           {
             name: name,
             email: "invalid email"
           }
-        }
-        let(:company_id) { create(:company).id }
+        end
 
         it "does not create a new Collaborator" do
           expect { action }.to change(Collaborator, :count).by(0)
@@ -132,19 +133,22 @@ RSpec.describe "/api/v1/collaborators", type: :request do
 
         it "renders the error for the collaborator" do
           action
-          expect(response.body).to match(expected_body)
+          expect(JSON.parse(response.body)).to match(expected_body)
         end
       end
 
       context "existing email" do
-        let(:expected_body) { "{\"email\":[\"has already been taken\"]}" }
-        let(:invalid_attributes) {
+        let(:company_id) { create(:company).id }
+        let(:invalid_attributes) do
           {
             name: name,
             email: email
           }
-        }
-        let(:company_id) { create(:company).id }
+        end
+
+        let(:expected_body) do
+          exception_body("Validation failed: Email has already been taken")
+        end
 
         before do
           create(:collaborator, email: email)
@@ -166,19 +170,19 @@ RSpec.describe "/api/v1/collaborators", type: :request do
 
         it "renders the error for the collaborator" do
           action
-          expect(response.body).to match(expected_body)
+          expect(JSON.parse(response.body)).to match(expected_body)
         end
       end
 
       context "blank name" do
-        let(:expected_body) { "{\"name\":[\"can't be blank\"]}" }
-        let(:invalid_attributes) {
+        let(:expected_body) { exception_body("Validation failed: Name can't be blank") }
+        let(:company_id) { create(:company).id }
+        let(:invalid_attributes) do
           {
             name: "",
             email: email
           }
-        }
-        let(:company_id) { create(:company).id }
+        end
 
         it "does not create a new Collaborator" do
           expect { action }.to change(Collaborator, :count).by(0)
@@ -196,19 +200,23 @@ RSpec.describe "/api/v1/collaborators", type: :request do
 
         it "renders the error for the collaborator" do
           action
-          expect(response.body).to match(expected_body)
+          expect(JSON.parse(response.body)).to match(expected_body)
         end
       end
 
       context "invalid company" do
-        let(:expected_body) { "{\"message\":\"Record not found\"}" }
-        let(:invalid_attributes) {
+        let(:company_id) { 1 }
+
+        let(:expected_body) do
+          exception_body("Couldn't find Company with 'id'=#{company_id}")
+        end
+
+        let(:invalid_attributes) do
           {
             name: name,
             email: email
           }
-        }
-        let(:company_id) { 1 }
+        end
 
         it "does not create a new Collaborator" do
           expect { action }.to change(Collaborator, :count).by(0)
@@ -226,7 +234,12 @@ RSpec.describe "/api/v1/collaborators", type: :request do
 
         it "renders the error for the not existing company" do
           action
-          expect(response.body).to match(expected_body)
+          expect(JSON.parse(response.body)).to match(expected_body)
+        end
+      end
+    end
+  end
+
   describe "GET /show" do
     let(:company) { create(:company) }
     let(:manager) { create(:collaborator, company: company) }
@@ -517,8 +530,8 @@ RSpec.describe "/api/v1/collaborators", type: :request do
     end
 
     it "returns the correct status code" do
-     action
-     expect(response).to have_http_status(:no_content)
-   end
+      action
+      expect(response).to have_http_status(:no_content)
+    end
   end
 end

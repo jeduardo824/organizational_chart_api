@@ -9,10 +9,16 @@ class Api::V1::CollaboratorsController < ApplicationController
 
   def index
     @collaborators = @company.collaborators
+
+    render :collaborators
   end
 
   def create
-    @collaborator = @company.collaborators.build(collaborator_params)
+    @collaborator = @company.collaborators.create!(collaborator_params)
+
+    render json: @collaborator, status: :created
+  end
+
   def show
     @collaborators = FindCollaboratorsService.call!(collaborator: @collaborator,
                                                     info_type: params[:info_type])
