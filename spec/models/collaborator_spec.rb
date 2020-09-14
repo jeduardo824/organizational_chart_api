@@ -6,6 +6,18 @@ RSpec.describe Collaborator, type: :model do
   it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to belong_to(:company) }
 
+  it do
+    is_expected.to have_many(:managed).
+                   class_name("Collaborator").
+                   with_foreign_key("manager_id")
+  end
+
+  it do
+    is_expected.to belong_to(:manager).
+                   class_name("Collaborator").
+                   optional
+  end
+
   describe "email validations" do
     it { is_expected.to allow_value("example@example.com").for(:email) }
     it { is_expected.not_to allow_value("invalid email").for(:email) }

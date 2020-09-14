@@ -5,5 +5,6 @@ FactoryBot.define do
     name { Faker::Company.name }
     email { Faker::Internet.safe_email }
     company
+    manager { nil }
   end
 end
