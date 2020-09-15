@@ -41,32 +41,37 @@ RSpec.describe Collaborator, type: :model do
 
   describe "#peers" do
     let(:manager) { create(:collaborator) }
-    let(:collaborators) do
-      create_list(:collaborator, 3, manager: manager, company: manager.company)
+
+    context "when collaborator has manager" do
+      let(:collaborators) do
+        create_list(:collaborator, 3, manager: manager, company: manager.company)
+      end
+
+      subject { collaborators.first.peers }
+
+      it "returns the correct peers" do
+        expect(subject).to match([collaborators.second, collaborators.third])
+      end
     end
 
-    subject { collaborators.first.peers }
+    context "when collaborator has not manager" do
+      let(:collaborator) { create(:collaborator, manager: nil) }
 
-    it "returns the correct peers" do
-      expect(subject).to match([collaborators.second, collaborators.third])
-    end
-  end
+      subject { collaborator.peers }
 
-  describe "#managed_by_manager" do
-    let(:manager) { create(:collaborator) }
-
-    let(:collaborators) do
-      create_list(:collaborator, 3, manager: manager, company: manager.company)
+      it "returns the correct peers" do
+        expect(subject).to eq([])
+      end
     end
 
-    let(:expected_array) do
-      [collaborators.first, collaborators.second, collaborators.third]
-    end
+    context "when collaborator has manager without other managed" do
+      let(:collaborator) { create(:collaborator, manager: manager) }
 
-    subject { collaborators.first.managed_by_manager }
+      subject { collaborator.peers }
 
-    it "returns the correct peers" do
-      expect(subject).to match(expected_array)
+      it "returns the correct peers" do
+        expect(subject).to eq([])
+      end
     end
   end
 end
