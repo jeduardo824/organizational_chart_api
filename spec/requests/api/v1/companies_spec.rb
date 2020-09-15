@@ -46,7 +46,8 @@ RSpec.describe "/api/v1/companies", type: :request do
   describe "GET /show" do
     context "with company available" do
       let(:company) { create(:company) }
-      let(:expected_body) { company_attributes(company) }
+      let!(:collaborators) { create_list(:collaborator, 3, company: company) }
+      let(:expected_body) { show_expected_response(company, collaborators) }
 
       before do
         get api_v1_company_url(company), as: :json
@@ -118,7 +119,9 @@ RSpec.describe "/api/v1/companies", type: :request do
 
         it "renders the created company" do
           action
-          expect(response.body).to match(a_string_including("A Company Name"))
+          expect(response.body).to match(a_string_including("A Company Name")) & \
+                                   match(a_string_including("Collaborator 1")) & \
+                                   match(a_string_including("Collaborator 2"))
         end
       end
 

@@ -16,4 +16,10 @@ module CollaboratorsSpecHelper
       company_id: collaborator.company_id
     }.stringify_keys
   end
+
+  def collaborators_without_company(collaborators)
+    collaborators_expected_response(collaborators).map do |collaborator|
+      collaborator.except("company_id")
+    end
+  end
 end
