@@ -9,6 +9,7 @@ RSpec.describe Collaborator, type: :model do
   it do
     is_expected.to have_many(:managed).
                    class_name("Collaborator").
+                   dependent(:nullify).
                    with_foreign_key("manager_id")
   end
 
