@@ -5,7 +5,7 @@ class Collaborator < ApplicationRecord
 
   belongs_to :company
   belongs_to :manager, class_name: "Collaborator", optional: true
-  has_many :managed, class_name: "Collaborator", foreign_key: "manager_id"
+  has_many :managed, class_name: "Collaborator", dependent: :nullify, foreign_key: "manager_id"
 
   validates :name, presence: true
   validates :email, format: {
