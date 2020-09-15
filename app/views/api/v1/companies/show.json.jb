@@ -1,6 +1,17 @@
 # frozen_string_literal: true
 
-{
+json = {
   id: @company.id,
-  name: @company.name
+  name: @company.name,
 }
+
+json[:collaborators] = @company.collaborators.map do |collaborator|
+  {
+    id: collaborator.id,
+      name: collaborator.name,
+      email: collaborator.email,
+      manager_id:  collaborator.manager_id
+  }
+end
+
+json
