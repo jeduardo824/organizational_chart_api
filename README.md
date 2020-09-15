@@ -45,6 +45,7 @@ You can obtain more information about those steps [here](https://www.postgresql.
 You can run the tests with `bundle exec rspec`. If you are using Docker, you should run `docker-compose run --rm bundle exec rspec`.
 
 ## API Documentation
+- The root of the API is configured to redirect to ___"api/v1/companies#index"___
 ### Company:
 #### POST /api/v1/companies
 - Action: ___api/v1/companies#create___
