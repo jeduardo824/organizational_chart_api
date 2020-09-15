@@ -16,7 +16,7 @@ class Api::V1::CollaboratorsController < ApplicationController
   def create
     @collaborator = @company.collaborators.create!(collaborator_params)
 
-    render json: @collaborator, status: :created
+    render :collaborator, status: :created
   end
 
   def show
@@ -30,12 +30,14 @@ class Api::V1::CollaboratorsController < ApplicationController
     ValidateManagerService.call!(collaborator: @collaborator, manager: @manager)
 
     @collaborator.update!(manager: @manager)
+
+    render :collaborator
   end
 
   def destroy
-    @collaborator.destroy
+    @collaborator.destroy!
 
-    head :no_content
+    render :collaborator
   end
 
   private

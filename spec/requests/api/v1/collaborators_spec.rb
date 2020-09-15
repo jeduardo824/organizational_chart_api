@@ -382,7 +382,9 @@ RSpec.describe "/api/v1/collaborators", type: :request do
           end
         end
       end
+    end
 
+    context "invalid request" do
       context "with invalid info_type" do
         let(:info_type) { :invalid }
         let(:expected_body) { exception_body("Information type is not valid") }
@@ -398,6 +400,26 @@ RSpec.describe "/api/v1/collaborators", type: :request do
 
         it "renders the correct records" do
           expect(JSON.parse(response.body)).to match(expected_body)
+        end
+      end
+
+      context "when collaborator does not exist" do
+        let(:collaborator_id) { 1 }
+        let(:expected_body) do
+          exception_body("Couldn't find Collaborator with 'id'=#{collaborator_id}")
+        end
+
+        before do
+          get api_v1_collaborator_url(id: collaborator_id,
+                                      info_type: :peers), as: :json
+        end
+
+        it "returns the correct status code" do
+          expect(response).to have_http_status(:not_found)
+        end
+
+        it "renders the error message" do
+          expect(JSON.parse(response.body)).to eq(expected_body)
         end
       end
     end
@@ -518,20 +540,100 @@ RSpec.describe "/api/v1/collaborators", type: :request do
           expect(JSON.parse(response.body)).to eq(expected_body)
         end
       end
+
+      context "when collaborator does not exist" do
+        let(:collaborator_id) { 1 }
+        let(:expected_body) do
+          exception_body("Couldn't find Collaborator with 'id'=#{collaborator_id}")
+        end
+
+        before do
+          put api_v1_collaborator_url(collaborator_id),
+              params: { manager_id: manager.id },
+              as: :json
+
+          collaborator.reload
+        end
+
+        it "returns the correct status code" do
+          expect(response).to have_http_status(:not_found)
+        end
+
+        it "renders the error message" do
+          expect(JSON.parse(response.body)).to eq(expected_body)
+        end
+      end
+
+      context "when manager does not exist" do
+        let(:manager_id) { 2 }
+        let(:expected_body) do
+          exception_body("Couldn't find Collaborator with 'id'=#{manager_id}")
+        end
+
+        before do
+          put api_v1_collaborator_url(collaborator),
+              params: { manager_id: manager_id },
+              as: :json
+
+          collaborator.reload
+        end
+
+        it "returns the correct status code" do
+          expect(response).to have_http_status(:not_found)
+        end
+
+        it "does not save the new manager" do
+          expect(collaborator.manager).to eq(nil)
+        end
+
+        it "renders the error message" do
+          expect(JSON.parse(response.body)).to eq(expected_body)
+        end
+      end
     end
   end
 
   describe "DELETE /destroy" do
-    let!(:collaborator) { create(:collaborator) }
     let(:action) { delete api_v1_collaborator_url(collaborator), as: :json }
 
-    it "destroys the requested collaborator" do
-      expect { action }.to change(Collaborator, :count).by(-1)
+    context "valid request" do
+      let!(:collaborator) { create(:collaborator) }
+      let(:expected_body) { collaborator_attributes(collaborator) }
+
+      it "destroys the requested collaborator" do
+        expect { action }.to change(Collaborator, :count).by(-1)
+      end
+
+      it "returns the correct status code" do
+        action
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "returns the deleted collaborator" do
+        action
+        expect(JSON.parse(response.body)).to match(expected_body)
+      end
     end
 
-    it "returns the correct status code" do
-      action
-      expect(response).to have_http_status(:no_content)
+    context "invalid request" do
+      let!(:collaborator) { 1 }
+      let(:expected_body) do
+        exception_body("Couldn't find Collaborator with 'id'=#{collaborator}")
+      end
+
+      it "destroys the requested collaborator" do
+        expect { action }.to change(Collaborator, :count).by(0)
+      end
+
+      it "returns the correct status code" do
+        action
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns the deleted collaborator" do
+        action
+        expect(JSON.parse(response.body)).to match(expected_body)
+      end
     end
   end
 end
