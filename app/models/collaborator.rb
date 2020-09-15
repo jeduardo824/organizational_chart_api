@@ -13,10 +13,14 @@ class Collaborator < ApplicationRecord
   }, uniqueness: { case_sensitive: false }
 
   def peers
+    return [] unless manager
+
     managed_by_manager.where.not(id: id)
   end
 
-  def managed_by_manager
-    manager.managed
-  end
+  private
+
+    def managed_by_manager
+      manager.managed
+    end
 end
