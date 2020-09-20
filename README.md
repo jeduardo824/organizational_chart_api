@@ -13,11 +13,12 @@ You can obtain more information about those steps [here](https://www.postgresql.
 3. Now, clone the project:
     `git clone https://github.com/jeduardo824/organizational_chart_api`
 4. Open a Terminal window inside the folder that you downloaded the project.
-5. If you don't have `bundler` installed, please do with `gem install bundler`.
-6. If you don't have `foreman` installed, please do with `gem install foreman`.
-7. Run `bundle install` to install the necessary gems.
-8. After this, you can set up your local database with `bundle exec rails db:setup`.
-9. You should be ready to run your local server with `foreman start -f Procfile.dev`.
+4. Copy the database configuration file with `cp config/database.yml.sample database.yml`.
+6. If you don't have `bundler` installed, please do with `gem install bundler`.
+7. If you don't have `foreman` installed, please do with `gem install foreman`.
+8. Run `bundle install` to install the necessary gems.
+9. After this, you can set up your local database with `bundle exec rails db:setup`.
+10. You should be ready to run your local server with `foreman start -f Procfile.dev`.
 
 ## Docker Usage
 
